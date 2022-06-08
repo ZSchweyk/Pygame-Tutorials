@@ -13,7 +13,7 @@ char = pygame.image.load('standing.png')
 clock = pygame.time.Clock()
 
 
-class player(object):
+class Player(object):
     def __init__(self,x,y,width,height):
         self.x = x
         self.y = y
@@ -49,7 +49,7 @@ def redrawGameWindow():
 
 
 #mainloop
-man = player(200, 410, 64,64)
+man = Player(200, 410, 64, 64)
 run = True
 while run:
     clock.tick(27)

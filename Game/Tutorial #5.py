@@ -1,3 +1,5 @@
+import random
+
 import pygame
 pygame.init()
 
@@ -13,13 +15,13 @@ char = pygame.image.load('standing.png')
 clock = pygame.time.Clock()
 
 
-class player(object):
+class Player(object):
     def __init__(self,x,y,width,height):
         self.x = x
         self.y = y
         self.width = width
         self.height = height
-        self.vel = 5
+        self.vel = 13
         self.isJump = False
         self.left = False
         self.right = False
@@ -31,7 +33,7 @@ class player(object):
         if self.walkCount + 1 >= 27:
             self.walkCount = 0
 
-        if not(self.standing):
+        if not (self.standing):
             if self.left:
                 win.blit(walkLeft[self.walkCount//3], (self.x,self.y))
                 self.walkCount += 1
@@ -46,56 +48,81 @@ class player(object):
                 
 
 
-class projectile(object):
-    def __init__(self,x,y,radius,color,facing):
+class Projectile(object):
+    bullets = []
+    def __init__(self,x,y,radius,color):
         self.x = x
         self.y = y
         self.radius = radius
         self.color = color
-        self.facing = facing
-        self.vel = 8 * facing
+        self.vel = -13
+        self.bullets.append(self)
 
-    def draw(self,win):
-        pygame.draw.circle(win, self.color, (self.x,self.y), self.radius)
+    def draw(self, win):
+        pygame.draw.circle(win, self.color, (self.x, self.y), self.radius)
+
+
+
+class Ball:
+    max_balls = 4
+    balls = []
+
+    def __init__(self, x, radius, color):
+        self.x = random.choice([0, 480-2*radius])
+        self.y = 0
+        self.radius = radius
+        self.color = color
+        self.vel_x = 3 if self.x == 0 else -3
+        self.vel_y = 0
+        self.accel = -9.8
+        self.balls.append(self)
+
+    def draw(self, win):
+
+        pygame.draw.circle(win, self.color, (self.x, self.y), self.radius)
 
 
 
 def redrawGameWindow():
     win.blit(bg, (0,0))
+
     man.draw(win)
-    for bullet in bullets:
+
+    for bullet in Projectile.bullets:
         bullet.draw(win)
+
+    for ball in Ball.balls:
+        ball.draw(win)
+
     
     pygame.display.update()
 
 
 #mainloop
-man = player(200, 410, 64,64)
-bullets = []
+man = Player(200, 410, 64, 64)
 run = True
 while run:
     clock.tick(27)
+    if len(Ball.balls) < Ball.max_balls:
+        Ball.balls.append(Ball(0, 18, (255, 0, 0)))
+
+    for ball in Ball.balls:
+        ball.y += ball.accel
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             run = False
         
-    for bullet in bullets:
-        if bullet.x < 500 and bullet.x > 0:
-            bullet.x += bullet.vel
+    for bullet in Projectile.bullets:
+        if bullet.y > 0:
+            bullet.y += bullet.vel
         else:
-            bullets.pop(bullets.index(bullet))
+            Projectile.bullets.pop(Projectile.bullets.index(bullet))
 
     keys = pygame.key.get_pressed()
 
     if keys[pygame.K_SPACE]:
-        if man.left:
-            facing = -1
-        else:
-            facing = 1
-            
-        if len(bullets) < 5:
-            bullets.append(projectile(round(man.x + man.width //2), round(man.y + man.height//2), 6, (0,0,0), facing))
+        Projectile.bullets.append(Projectile(round(man.x + man.width // 2), round(man.y + 3), 6, (0, 0, 0)))
 
     if keys[pygame.K_LEFT] and man.x > man.vel:
         man.x -= man.vel
